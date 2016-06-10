@@ -59,15 +59,19 @@
       <file leaf-file-name="Analyser.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/Analyser.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="374">
-              <caret line="40" column="0" selection-start-line="40" selection-start-column="0" selection-end-line="40" selection-end-column="0" />
+            <state relative-caret-position="425">
+              <caret line="25" column="49" selection-start-line="25" selection-start-column="49" selection-end-line="25" selection-end-column="49" />
               <folding>
                 <element signature="imports" expanded="true" />
+                <element signature="method#checkConfig#0;class#Analyser#0" expanded="false" />
+                <element signature="method#writeProperty#0;class#Analyser#0" expanded="false" />
+                <element signature="method#getProperty#0;class#Analyser#0" expanded="false" />
                 <element signature="method#generateString#0;class#Analyser#0" expanded="false" />
                 <element signature="method#authenticate#0;class#Analyser#0" expanded="false" />
                 <element signature="method#getAccessToken#0;class#Analyser#0" expanded="false" />
-                <element signature="method#getCurrentUser#0;class#Analyser#0" expanded="false" />
-                <element signature="method#getUserPlaylists#0;class#Analyser#0" expanded="false" />
+                <element signature="e#8410#8411#0" expanded="true" />
+                <element signature="e#8441#8442#0" expanded="true" />
+                <marker date="1465562896579" expanded="false" signature="2627:2982" placeholder="{...}" />
               </folding>
             </state>
           </provider>
@@ -752,12 +756,12 @@
       <workItem from="1465475443041" duration="2353000" />
       <workItem from="1465498989213" duration="10246000" />
       <workItem from="1465550857075" duration="8670000" />
-      <workItem from="1465561557586" duration="64000" />
+      <workItem from="1465561557586" duration="1387000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="21333000" />
+    <option name="totallyTimeSpent" value="22656000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1920" height="1080" extended-state="0" />
@@ -771,11 +775,11 @@
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16154608" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.17194092" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.12153518" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.12258065" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -844,11 +848,15 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="imports" expanded="true" />
+            <element signature="method#checkConfig#0;class#Analyser#0" expanded="false" />
+            <element signature="method#writeProperty#0;class#Analyser#0" expanded="false" />
+            <element signature="method#getProperty#0;class#Analyser#0" expanded="false" />
             <element signature="method#generateString#0;class#Analyser#0" expanded="false" />
             <element signature="method#authenticate#0;class#Analyser#0" expanded="false" />
             <element signature="method#getAccessToken#0;class#Analyser#0" expanded="false" />
-            <element signature="method#getCurrentUser#0;class#Analyser#0" expanded="false" />
-            <element signature="method#getUserPlaylists#0;class#Analyser#0" expanded="false" />
+            <element signature="e#8410#8411#0" expanded="true" />
+            <element signature="e#8441#8442#0" expanded="true" />
+            <marker date="1465562896579" expanded="false" signature="2627:2982" placeholder="{...}" />
           </folding>
         </state>
       </provider>
@@ -931,11 +939,15 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="imports" expanded="true" />
+            <element signature="method#checkConfig#0;class#Analyser#0" expanded="false" />
+            <element signature="method#writeProperty#0;class#Analyser#0" expanded="false" />
+            <element signature="method#getProperty#0;class#Analyser#0" expanded="false" />
             <element signature="method#generateString#0;class#Analyser#0" expanded="false" />
             <element signature="method#authenticate#0;class#Analyser#0" expanded="false" />
             <element signature="method#getAccessToken#0;class#Analyser#0" expanded="false" />
-            <element signature="method#getCurrentUser#0;class#Analyser#0" expanded="false" />
-            <element signature="method#getUserPlaylists#0;class#Analyser#0" expanded="false" />
+            <element signature="e#8410#8411#0" expanded="true" />
+            <element signature="e#8441#8442#0" expanded="true" />
+            <marker date="1465562896579" expanded="false" signature="2627:2982" placeholder="{...}" />
           </folding>
         </state>
       </provider>
@@ -1068,15 +1080,19 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/Analyser.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="374">
-          <caret line="40" column="0" selection-start-line="40" selection-start-column="0" selection-end-line="40" selection-end-column="0" />
+        <state relative-caret-position="425">
+          <caret line="25" column="49" selection-start-line="25" selection-start-column="49" selection-end-line="25" selection-end-column="49" />
           <folding>
             <element signature="imports" expanded="true" />
+            <element signature="method#checkConfig#0;class#Analyser#0" expanded="false" />
+            <element signature="method#writeProperty#0;class#Analyser#0" expanded="false" />
+            <element signature="method#getProperty#0;class#Analyser#0" expanded="false" />
             <element signature="method#generateString#0;class#Analyser#0" expanded="false" />
             <element signature="method#authenticate#0;class#Analyser#0" expanded="false" />
             <element signature="method#getAccessToken#0;class#Analyser#0" expanded="false" />
-            <element signature="method#getCurrentUser#0;class#Analyser#0" expanded="false" />
-            <element signature="method#getUserPlaylists#0;class#Analyser#0" expanded="false" />
+            <element signature="e#8410#8411#0" expanded="true" />
+            <element signature="e#8441#8442#0" expanded="true" />
+            <marker date="1465562896579" expanded="false" signature="2627:2982" placeholder="{...}" />
           </folding>
         </state>
       </provider>

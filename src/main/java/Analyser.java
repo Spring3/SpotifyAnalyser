@@ -4,10 +4,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.wrapper.spotify.Api;
 import com.wrapper.spotify.methods.CurrentUserRequest;
 import com.wrapper.spotify.methods.UserPlaylistsRequest;
-import com.wrapper.spotify.models.AuthorizationCodeCredentials;
-import com.wrapper.spotify.models.Page;
-import com.wrapper.spotify.models.SimplePlaylist;
-import com.wrapper.spotify.models.User;
+import com.wrapper.spotify.models.*;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
@@ -46,7 +43,7 @@ public class Analyser {
     private final Security security = Security.getInstance();
 
     public void getInfo(){
-        checkClientId();
+        checkConfig();
         if (getProperty(Config.USERID.getVal()) == null)
             authenticate();
         getCurrentUser();
@@ -54,6 +51,29 @@ public class Analyser {
     }
 
     private void checkConfig(){
+        if (getProperty(Config.USERID.getVal()) != null){
+            LocalDateTime time = (LocalDateTime.parse(getProperty(Config.EXP.getVal())));
+            userData.setTokenExpTime(time);
+            if (userData.isTokenExpired()){
+                api.setAccessToken(getProperty(Config.AT.getVal()));
+                api.setRefreshToken(getProperty(Config.RT.getVal()));
+                refreshToken();
+            }
+        }
+        checkClientId();
+    }
+
+    private void refreshToken(){
+        try {
+            final RefreshAccessTokenCredentials refreshAccessTokenCredentials = api.refreshAccessToken().build().get();
+
+            writeProperty(Config.AT.getVal(), refreshAccessTokenCredentials.getAccessToken());
+            LocalDateTime tokenExpTime = LocalDateTime.now().plusHours(1);
+            writeProperty(Config.EXP.getVal(), tokenExpTime.toString());
+            userData.setTokenExpTime(tokenExpTime);
+        }
+        catch (Exception ex){ }
+
 
     }
 
@@ -66,8 +86,6 @@ public class Analyser {
         }
         userData.setClientId(getProperty(Config.CLIENTID.getVal()));
         System.out.println(userData.getClientId());
-
-
     }
 
     private void writeProperty(String key, String value){
@@ -171,10 +189,13 @@ public class Analyser {
     }
 
     private void getCurrentUser(){
+        if(userData.isTokenExpired())
+            refreshToken();
         final CurrentUserRequest request = api.getMe().build();
         try{
             final User user = request.get();
             System.out.println(String.format("Current user id: %s", user.getId()));
+            writeProperty(Config.USERID.getVal(), user.getId());
             userData.setUserId(user.getId());
         }
         catch (Exception ex){        }
