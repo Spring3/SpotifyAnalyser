@@ -3,8 +3,11 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import com.wrapper.spotify.Api;
 import com.wrapper.spotify.methods.CurrentUserRequest;
+import com.wrapper.spotify.methods.GetMySavedTracksRequest;
+import com.wrapper.spotify.methods.PlaylistTracksRequest;
 import com.wrapper.spotify.methods.UserPlaylistsRequest;
 import com.wrapper.spotify.models.*;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
@@ -29,34 +32,39 @@ public class Analyser {
     public Analyser(Stage stage){
         this.stage = stage;
         properties = new Properties();
-        api = Api.builder()
-                .clientId(CLIENT_ID)
-                .clientSecret(CLIENT_SECRET)
-                .redirectURI(REDIRECT_URI)
-                .build();
     }
 
     private Properties properties;
     private Stage stage;
-    private Api api;
+    private Api api = Api.builder()
+            .clientId(CLIENT_ID)
+            .clientSecret(CLIENT_SECRET)
+            .redirectURI(REDIRECT_URI)
+            .build();
+
     private final Data userData = Data.getInstance();
     private final Security security = Security.getInstance();
 
     public void getInfo(){
         checkConfig();
-        if (getProperty(Config.USERID.getVal()) == null)
+        if (getProperty(Config.USERID.getVal()) == null) {
             authenticate();
-        getCurrentUser();
-        getUserPlaylists();
+        }
+        else {
+            getUserPlaylists();
+            getUserSavedTracks();
+            analyse();
+        }
     }
 
     private void checkConfig(){
         if (getProperty(Config.USERID.getVal()) != null){
             LocalDateTime time = (LocalDateTime.parse(getProperty(Config.EXP.getVal())));
             userData.setTokenExpTime(time);
+            userData.setUserId(getProperty(Config.USERID.getVal()));
+            api.setAccessToken(getProperty(Config.AT.getVal()));
+            api.setRefreshToken(getProperty(Config.RT.getVal()));
             if (userData.isTokenExpired()){
-                api.setAccessToken(getProperty(Config.AT.getVal()));
-                api.setRefreshToken(getProperty(Config.RT.getVal()));
                 refreshToken();
             }
         }
@@ -65,14 +73,18 @@ public class Analyser {
 
     private void refreshToken(){
         try {
+            System.out.println("Refreshing token...");
             final RefreshAccessTokenCredentials refreshAccessTokenCredentials = api.refreshAccessToken().build().get();
 
             writeProperty(Config.AT.getVal(), refreshAccessTokenCredentials.getAccessToken());
+            api.setAccessToken(refreshAccessTokenCredentials.getAccessToken());
             LocalDateTime tokenExpTime = LocalDateTime.now().plusHours(1);
             writeProperty(Config.EXP.getVal(), tokenExpTime.toString());
             userData.setTokenExpTime(tokenExpTime);
         }
-        catch (Exception ex){ }
+        catch (Exception ex){
+            ex.printStackTrace();
+        }
 
 
     }
@@ -85,7 +97,7 @@ public class Analyser {
             System.out.println(clientId);
         }
         userData.setClientId(getProperty(Config.CLIENTID.getVal()));
-        System.out.println(userData.getClientId());
+        System.out.println("Client id: " + userData.getClientId());
     }
 
     private void writeProperty(String key, String value){
@@ -98,7 +110,7 @@ public class Analyser {
             output.close();
         }
         catch (Exception ex){
-
+            ex.printStackTrace();
         }
     }
 
@@ -118,7 +130,7 @@ public class Analyser {
             return security.decrypt(new SecretKeySpec(pubkeyBytes, 0, pubkeyBytes.length, "DES"), result);
         }
         catch (Exception ex){
-
+            ex.printStackTrace();
         }
         return null;
     }
@@ -144,6 +156,7 @@ public class Analyser {
         stage.setScene(new Scene(web));
         stage.show();
 
+
         web.getEngine().getLoadWorker().stateProperty().addListener(new ChangeListener<Worker.State>() {
             @Override
             public void changed(ObservableValue<? extends Worker.State> observable, Worker.State oldValue, Worker.State newValue) {
@@ -154,11 +167,12 @@ public class Analyser {
                         System.out.println(String.format("App key: %s", appKey));
                         stage.hide();
                         getAccessToken(appKey);
+                        getCurrentUser();
+                        getInfo();
                     }
                 }
             }
         });
-
     }
 
     private void getAccessToken(String appKey){
@@ -198,28 +212,69 @@ public class Analyser {
             writeProperty(Config.USERID.getVal(), user.getId());
             userData.setUserId(user.getId());
         }
-        catch (Exception ex){        }
+        catch (Exception ex){
+            ex.printStackTrace();
+        }
     }
 
     private void getUserPlaylists(){
+        if(userData.isTokenExpired())
+            refreshToken();
         final UserPlaylistsRequest request = api.getPlaylistsForUser(userData.getUserId()).build();
 
         try{
             final Page<SimplePlaylist> playlistPage = request.get();
             userData.setPlaylists(playlistPage.getItems());
+            System.out.println(String.format("Found %d playlists", playlistPage.getItems().size()));
         }
-        catch (Exception ex){   }
+        catch (Exception ex){
+            ex.printStackTrace();
+        }
     }
 
     private void getUserSavedTracks(){
+        if (userData.isTokenExpired())
+            refreshToken();
+        int offset = 0;
+        List<LibraryTrack> tracks = new ArrayList<>(50);
+        boolean hasMore = true;
+        try {
+            while (hasMore) {
+                GetMySavedTracksRequest request = api.getMySavedTracks().limit(50).offset(offset).build();
+                Page<LibraryTrack> libraryTracks = request.get();
+                offset += 50;
+                tracks.addAll(libraryTracks.getItems());
+                if (offset > libraryTracks.getTotal())
+                    hasMore = false;
+            }
+            System.out.println(String.format("Found %d saved tracks", tracks.size()));
+            userData.setTracks(tracks);
+        }
+        catch (Exception ex){
+            ex.printStackTrace();
+        }
 
-    }
-
-    public Data getUserData(){
-        return userData;
     }
 
     public void analyse(){
-
+        List<PlaylistTrack> tracks = new ArrayList<>(300);
+        for(SimplePlaylist playlist : userData.getPlaylists()){
+            boolean hasMore = true;
+            int offset = 0;
+            while(hasMore) {
+                final PlaylistTracksRequest request = api.getPlaylistTracks(playlist.getOwner().getId(), playlist.getId()).offset(offset).build();
+                try {
+                    Page<PlaylistTrack> playlistPage = request.get();
+                    tracks.addAll(playlistPage.getItems());
+                    offset += 100;
+                    if (offset > playlistPage.getTotal())
+                        hasMore = false;
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+        System.out.println(String.format("Total tracks in playlists: %d", tracks.size()));
+        Platform.exit();
     }
 }

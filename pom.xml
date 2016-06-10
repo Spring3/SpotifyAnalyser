@@ -22,11 +22,19 @@
 
 
     <dependencies>
+        <!-- external jar, because the version from the maven central contains bugs that were hotfixed and not yet released -->
         <dependency>
+            <groupId>spotifyAnalyser</groupId>
+            <artifactId>spotifyAnalyser</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/spotify-web-api-java.jar</systemPath>
+        </dependency>
+        <!--<dependency>
             <groupId>se.michaelthelin.spotify</groupId>
             <artifactId>spotify-web-api-java</artifactId>
             <version>1.5.0</version>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>

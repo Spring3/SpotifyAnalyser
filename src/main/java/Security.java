@@ -3,12 +3,8 @@ import sun.misc.BASE64Encoder;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
 import java.security.Key;
 
-/**
- * Created by Insomnia-PC1 on 10.06.2016.
- */
 public class Security {
 
     private Security(){

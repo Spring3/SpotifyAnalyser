@@ -1,3 +1,4 @@
+import com.wrapper.spotify.models.LibraryTrack;
 import com.wrapper.spotify.models.SimplePlaylist;
 
 import java.time.LocalDateTime;
@@ -11,6 +12,7 @@ public class Data{
     private String userId;
     private String clientId;
     private List<SimplePlaylist> playlists;
+    private List<LibraryTrack> tracks;
     private LocalDateTime tokenExpTime;
 
     public static Data getInstance(){
@@ -52,7 +54,15 @@ public class Data{
         this.tokenExpTime = tokenExpTime;
     }
 
+    public void setTracks(List<LibraryTrack> tracks){
+        this.tracks = tracks;
+    }
+
+    public List<LibraryTrack> getTracks(){
+        return tracks;
+    }
+
     public boolean isTokenExpired(){
-        return LocalDateTime.now().isAfter(tokenExpTime);
+        return tokenExpTime == null ? false : LocalDateTime.now().isAfter(tokenExpTime);
     }
 }
