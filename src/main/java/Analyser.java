@@ -1,4 +1,8 @@
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.SettableFuture;
 import com.wrapper.spotify.Api;
+import com.wrapper.spotify.models.AuthorizationCodeCredentials;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
@@ -35,7 +39,7 @@ public class Analyser {
     private OutputStream output;
     private Stage stage;
     private Api api;
-    private String accessToken;
+    private String appKey;
 
     public void generateClientId() {
         properties = new Properties();
@@ -71,7 +75,7 @@ public class Analyser {
 
         final List<String> scopes = Arrays.asList("user-read-private");
         final String state = "Initialized";
-        String authorizeURL= api.createAuthorizeURL(scopes, state);
+        final String authorizeURL= api.createAuthorizeURL(scopes, state);
         final WebView web = new WebView();
         web.getEngine().load(authorizeURL);
         stage.setScene(new Scene(web));
@@ -83,29 +87,35 @@ public class Analyser {
                 if (newValue == Worker.State.SUCCEEDED){
                     if (web.getEngine().getLocation().contains("?code=")){
                         String location = web.getEngine().getLocation();
-                        accessToken = location.substring(location.indexOf("?code=") + 6, location.indexOf("&state"));
-                        System.out.println(String.format("Access token: %s", accessToken));
+                        appKey = location.substring(location.indexOf("?code=") + 6, location.indexOf("&state"));
+                        System.out.println(String.format("App key: %s", appKey));
                         stage.hide();
+                        getAccessToken();
                     }
                 }
             }
         });
-        /*
-        final ClientCredentialsGrantRequest request = api.clientCredentialsGrant().build();
-        final SettableFuture<ClientCredentials> responseFuture = request.getAsync();
 
-        Futures.addCallback(responseFuture, new FutureCallback<ClientCredentials>() {
-            public void onSuccess(ClientCredentials clientCredentials) {
-                System.out.println(String.format("Access token expires in %d seconds", clientCredentials.getExpiresIn()));
-                api.setAccessToken(clientCredentials.getAccessToken());
+    }
 
+    private void getAccessToken(){
+        SettableFuture<AuthorizationCodeCredentials> authorizationCodeCredentialsSettableFuture = api.authorizationCodeGrant(appKey).build().getAsync();
+
+        Futures.addCallback(authorizationCodeCredentialsSettableFuture, new FutureCallback<AuthorizationCodeCredentials>() {
+            @Override
+            public void onSuccess(AuthorizationCodeCredentials authorizationCodeCredentials) {
+                System.out.println(String.format("Access token: %s", authorizationCodeCredentials.getAccessToken()));
+                System.out.println(String.format("Refresh token: %s", authorizationCodeCredentials.getRefreshToken()));
+
+                api.setAccessToken(authorizationCodeCredentials.getAccessToken());
+                api.setRefreshToken(authorizationCodeCredentials.getRefreshToken());
             }
 
+            @Override
             public void onFailure(Throwable throwable) {
 
             }
         });
-        */
     }
 
     public void analyse(){
