@@ -265,27 +265,34 @@ public class Analyser {
     public void analyse(){
         List<PlaylistTrack> tracks = getTracksFromPlaylists();
 
-        HttpClient client = HttpClientBuilder.create().build();
 
-        for(LibraryTrack track : userData.getTracks()){
-            getTrackInfo(client, track.getTrack().getId());
-        }
-        userData.getTracks().clear();
+
+        Thread thread = new Thread(() ->{
+            for(LibraryTrack track : userData.getTracks()){
+                getTrackInfo(track.getTrack().getId());
+            }
+            userData.getTracks().clear();
+        });
+
+        thread.setDaemon(true);
+        thread.start();
+
 
         for(PlaylistTrack track : tracks){
-            getTrackInfo(client, track.getTrack().getId());
+            getTrackInfo(track.getTrack().getId());
         }
-
-
 
         Platform.exit();
     }
 
-    private void getTrackInfo(HttpClient client, String trackId){
+    private synchronized void getTrackInfo(String trackId){
+        final HttpClient client = HttpClientBuilder.create().build();
         String baseURL = String.format("https://api.spotify.com/v1/audio-features/%s", trackId);
         HttpGet requestTrackInfo = new HttpGet(baseURL);
-        if (userData.isTokenExpired())
-            refreshToken();
+        synchronized (Analyser.class) {
+            if (userData.isTokenExpired())
+                refreshToken();
+        }
         requestTrackInfo.addHeader("Authorization", String.format("Bearer  %s", getProperty(Config.AT.getVal())));
         try {
             HttpResponse response = client.execute(requestTrackInfo);
@@ -297,15 +304,16 @@ public class Analyser {
             while ((line = rd.readLine()) != null) {
                 result.append(line);
             }
-            sendTrackInfo(client, result.toString());
+            sendTrackInfo(result.toString());
         }
         catch (Exception ex){
             ex.printStackTrace();
         }
     }
 
-    private void sendTrackInfo(HttpClient client, String json){
+    private void sendTrackInfo(String json){
         final String baseURL = "https://tracksdata.herokuapp.com/rest/save";
+        final HttpClient client = HttpClientBuilder.create().build();
         HttpPost request = new HttpPost(baseURL);
         request.setHeader("Content-Type", "application/json");
         try {
@@ -313,6 +321,9 @@ public class Analyser {
             HttpResponse response = client.execute(request);
             if (response.getStatusLine().getStatusCode() == 200){
                 System.out.println("Sent");
+            }
+            else{
+                System.out.println("Duplicate");
             }
         }
         catch (Exception ex){
