@@ -14,6 +14,14 @@ import javafx.concurrent.Worker;
 import javafx.scene.Scene;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClientBuilder;
+
+
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
 import java.security.Key;
@@ -85,8 +93,6 @@ public class Analyser {
         catch (Exception ex){
             ex.printStackTrace();
         }
-
-
     }
 
     private void checkClientId() {
@@ -257,6 +263,64 @@ public class Analyser {
     }
 
     public void analyse(){
+        List<PlaylistTrack> tracks = getTracksFromPlaylists();
+
+        HttpClient client = HttpClientBuilder.create().build();
+
+        for(LibraryTrack track : userData.getTracks()){
+            getTrackInfo(client, track.getTrack().getId());
+        }
+        userData.getTracks().clear();
+
+        for(PlaylistTrack track : tracks){
+            getTrackInfo(client, track.getTrack().getId());
+        }
+
+
+
+        Platform.exit();
+    }
+
+    private void getTrackInfo(HttpClient client, String trackId){
+        String baseURL = String.format("https://api.spotify.com/v1/audio-features/%s", trackId);
+        HttpGet requestTrackInfo = new HttpGet(baseURL);
+        if (userData.isTokenExpired())
+            refreshToken();
+        requestTrackInfo.addHeader("Authorization", String.format("Bearer  %s", getProperty(Config.AT.getVal())));
+        try {
+            HttpResponse response = client.execute(requestTrackInfo);
+            BufferedReader rd = new BufferedReader(
+                    new InputStreamReader(response.getEntity().getContent()));
+
+            StringBuffer result = new StringBuffer();
+            String line = "";
+            while ((line = rd.readLine()) != null) {
+                result.append(line);
+            }
+            sendTrackInfo(client, result.toString());
+        }
+        catch (Exception ex){
+            ex.printStackTrace();
+        }
+    }
+
+    private void sendTrackInfo(HttpClient client, String json){
+        final String baseURL = "https://tracksdata.herokuapp.com/rest/save";
+        HttpPost request = new HttpPost(baseURL);
+        request.setHeader("Content-Type", "application/json");
+        try {
+            request.setEntity(new StringEntity(json));
+            HttpResponse response = client.execute(request);
+            if (response.getStatusLine().getStatusCode() == 200){
+                System.out.println("Sent");
+            }
+        }
+        catch (Exception ex){
+            ex.printStackTrace();
+        }
+    }
+
+    private List<PlaylistTrack> getTracksFromPlaylists(){
         List<PlaylistTrack> tracks = new ArrayList<>(300);
         for(SimplePlaylist playlist : userData.getPlaylists()){
             boolean hasMore = true;
@@ -275,6 +339,6 @@ public class Analyser {
             }
         }
         System.out.println(String.format("Total tracks in playlists: %d", tracks.size()));
-        Platform.exit();
+        return tracks;
     }
 }
