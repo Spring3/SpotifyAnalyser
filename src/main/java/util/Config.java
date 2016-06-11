@@ -1,9 +1,9 @@
+package util;
 
 public enum Config {
 
     AT("AT"),
     RT("RT"),
-    CLIENTID("clientId"),
     EXP("EXP"),
     USERID("uid");
 

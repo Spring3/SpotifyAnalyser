@@ -1,0 +1,28 @@
+.progress .bar{
+  -fx-background-color: #A5D6A7;
+  -fx-background-radius: 2, 2, 2, 2;
+  -fx-background-insets: 3;
+}
+
+.progress .track{
+  -fx-background-color: #F5F5F5;
+  -fx-background-radius: 2, 2, 2, 2;
+  -fx-border-color: #A1887F;
+  -fx-border-radius: 2, 2, 2, 2;
+  -fx-background-insets: 0;
+}
+
+
+.button{
+  -fx-background-color: white;
+  -fx-border-radius: 2, 2, 2, 2;
+  -fx-border-color: #A1887F;
+
+}
+
+.ghost{
+  -fx-background-color: transparent;
+  -fx-border-radius: 2, 2, 2, 2;
+  -fx-border-color: #A1887F;
+  -fx-border-width: 0;
+}

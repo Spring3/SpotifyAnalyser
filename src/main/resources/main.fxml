@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="183.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.UIController">
+   <children>
+      <BorderPane prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <center>
+            <AnchorPane prefHeight="200.0" prefWidth="200.0" styleClass="back" stylesheets="@styles.css" BorderPane.alignment="CENTER">
+               <children>
+                  <Label alignment="CENTER" layoutY="14.0" prefHeight="31.0" prefWidth="600.0" text="Bliss analyser" textAlignment="CENTER" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="10.0">
+                     <font>
+                        <Font name="Hiragino Sans W1" size="30.0" />
+                     </font>
+                  </Label>
+                  <ProgressBar fx:id="progress" layoutX="20.0" layoutY="121.0" prefHeight="30.0" prefWidth="600.0" progress="0.0" styleClass="progress" stylesheets="@styles.css" visible="false" AnchorPane.bottomAnchor="36.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" />
+                  <Label fx:id="lbl_success" alignment="CENTER" layoutX="21.0" layoutY="124.0" prefHeight="17.0" prefWidth="558.0" text="SUCCESS" textFill="#2e7d32" visible="false" AnchorPane.bottomAnchor="42.0" AnchorPane.leftAnchor="21.0" AnchorPane.rightAnchor="21.0">
+                     <font>
+                        <Font name="Gill Sans" size="13.0" />
+                     </font>
+                  </Label>
+                  <Label fx:id="lbl_status" alignment="CENTER" layoutY="90.0" prefHeight="16.0" prefWidth="327.0" text="Retrieving playlists..." textAlignment="CENTER" visible="false" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="80.0">
+                     <font>
+                        <Font name="Hiragino Sans W1" size="18.0" />
+                     </font>
+                  </Label>
+                  <Button fx:id="btn_analyse" layoutX="251.0" layoutY="80.0" mnemonicParsing="false" onAction="#btn_begin" prefHeight="36.0" prefWidth="99.0" text="Analyse" AnchorPane.bottomAnchor="67.0" AnchorPane.leftAnchor="251.0" AnchorPane.rightAnchor="250.0">
+                     <font>
+                        <Font name="Hiragino Sans W1" size="18.0" />
+                     </font>
+                  </Button>
+                  <Separator layoutX="200.0" layoutY="64.0" prefWidth="200.0" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="200.0" AnchorPane.topAnchor="54.0" />
+                  <Button fx:id="btn_switchAcc" layoutX="234.0" layoutY="155.0" mnemonicParsing="false" onAction="#btn_logout" prefHeight="24.0" prefWidth="133.0" styleClass="ghost" text="Another account?" visible="false">
+                     <font>
+                        <Font name="Hiragino Sans W1" size="13.0" />
+                     </font>
+                  </Button>
+               </children>
+            </AnchorPane>
+         </center>
+      </BorderPane>
+   </children>
+</AnchorPane>

@@ -1,3 +1,5 @@
+package core;
+
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
@@ -20,49 +22,80 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
-
-
+import ui.UIController;
+import util.Config;
+import util.Data;
+import util.Security;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.Key;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.FileHandler;
+import java.util.logging.Logger;
 
 /**
  * Created by spring on 6/9/16.
  */
-public class Analyser {
+public class Analyser{
 
     private static final String CLIENT_ID = "";
     private static final String CLIENT_SECRET = "";
     private static final String REDIRECT_URI = "";
+    private static Logger logger = Logger.getLogger("log");
 
-    public Analyser(Stage stage){
-        this.stage = stage;
+    public Analyser(UIController controller){
         properties = new Properties();
+        sentTracks = new AtomicInteger(0);
+        userData = new Data();
+        security = Security.getInstance();
+        uiController = controller;
+        try {
+            logger.addHandler(new FileHandler("logs"));
+        }catch (Exception ex){ex.printStackTrace();}
     }
 
     private Properties properties;
-    private Stage stage;
+    private double totalTracks;
+    private AtomicInteger sentTracks;
+    private UIController uiController;
     private Api api = Api.builder()
             .clientId(CLIENT_ID)
             .clientSecret(CLIENT_SECRET)
             .redirectURI(REDIRECT_URI)
             .build();
 
-    private final Data userData = Data.getInstance();
-    private final Security security = Security.getInstance();
+    private final Data userData;
+    private final Security security;
+
 
     public void getInfo(){
-        checkConfig();
-        if (getProperty(Config.USERID.getVal()) == null) {
-            authenticate();
-        }
-        else {
-            getUserPlaylists();
-            getUserSavedTracks();
-            analyse();
-        }
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                checkConfig();
+                if (getProperty(Config.USERID.getVal()) == null) {
+                    Platform.runLater(() -> {
+                        authenticate();
+                        return;
+                    });
+
+                }else {
+                    getUserPlaylists();
+                    getUserSavedTracks();
+                    analyse();
+                }
+            }
+        });
+        thread.setDaemon(true);
+        thread.start();
+        ping();
+
     }
 
     private void checkConfig(){
@@ -76,7 +109,6 @@ public class Analyser {
                 refreshToken();
             }
         }
-        checkClientId();
     }
 
     private void refreshToken(){
@@ -95,20 +127,36 @@ public class Analyser {
         }
     }
 
-    private void checkClientId() {
-
-        if (getProperty(Config.CLIENTID.getVal()) == null) {
-            String clientId = generateString(16);
-            writeProperty(Config.CLIENTID.getVal(), clientId);
-            System.out.println(clientId);
+    private Path checkPropertyFile(){
+        try {
+            Path propFile = Paths.get("config.properties");
+            if (!Files.exists(propFile, LinkOption.NOFOLLOW_LINKS)) {
+                Files.createFile(propFile);
+            }
+            return propFile;
         }
-        userData.setClientId(getProperty(Config.CLIENTID.getVal()));
-        System.out.println("Client id: " + userData.getClientId());
+        catch (IOException ex){
+            ex.printStackTrace();
+            logger.throwing("Analyser", "checkPropFile", ex);
+        }
+        return null;
+    }
+
+    public void clearProperties(){
+        try {
+            Path propFile = checkPropertyFile();
+            Files.delete(propFile);
+        }
+        catch (Exception ex){
+            ex.printStackTrace();
+            logger.throwing("Analyser", "checkProperties", ex);
+        }
     }
 
     private void writeProperty(String key, String value){
         try {
-            OutputStream output = new FileOutputStream(getClass().getClassLoader().getResource("config.properties").getFile());
+            Path propFile = checkPropertyFile();
+            OutputStream output = new FileOutputStream(propFile.toFile().getPath());
             Key pubKey = Security.generateKey();
             String encValue = security.encrypt(pubKey, value);
             properties.setProperty(key, String.format("%s|%s", Base64.getEncoder().encodeToString(pubKey.getEncoded()), encValue));
@@ -117,12 +165,14 @@ public class Analyser {
         }
         catch (Exception ex){
             ex.printStackTrace();
+            logger.throwing("Analyser", "writeProperty", ex);
         }
     }
 
     private String getProperty(String key){
         try {
-            InputStream input = new FileInputStream(getClass().getClassLoader().getResource("config.properties").getFile());
+            Path propFile = checkPropertyFile();
+            InputStream input = new FileInputStream(propFile.toFile().getPath());
             properties.load(input);
             String result = properties.getProperty(key);
             if (result == null) {
@@ -137,6 +187,7 @@ public class Analyser {
         }
         catch (Exception ex){
             ex.printStackTrace();
+            logger.throwing("Analyser", "getProperty", ex);
         }
         return null;
     }
@@ -154,6 +205,7 @@ public class Analyser {
 
     private void authenticate(){
 
+        Stage stage = new Stage();
         final List<String> scopes = Arrays.asList("user-read-private", "user-library-read", "playlist-read-private", "playlist-read-collaborative");
         final String state = "Initialized";
         final String authorizeURL= api.createAuthorizeURL(scopes, state);
@@ -171,7 +223,7 @@ public class Analyser {
                         String location = web.getEngine().getLocation();
                         String appKey = location.substring(location.indexOf("?code=") + 6, location.indexOf("&state"));
                         System.out.println(String.format("App key: %s", appKey));
-                        stage.hide();
+                        stage.close();
                         getAccessToken(appKey);
                         getCurrentUser();
                         getInfo();
@@ -203,7 +255,7 @@ public class Analyser {
 
             @Override
             public void onFailure(Throwable throwable) {
-
+                logger.throwing("Analyser", "getAccessToken", throwable);
             }
         });
     }
@@ -220,25 +272,47 @@ public class Analyser {
         }
         catch (Exception ex){
             ex.printStackTrace();
+            logger.throwing("Analyser", "getCurrentUser", ex);
         }
     }
 
     private void getUserPlaylists(){
+        Platform.runLater(()-> {
+            uiController.setStatus("Searching for playlists...");
+        });
+
         if(userData.isTokenExpired())
             refreshToken();
         final UserPlaylistsRequest request = api.getPlaylistsForUser(userData.getUserId()).build();
+        final SettableFuture<Page<SimplePlaylist>> responseFuture = request.getAsync();
 
         try{
-            final Page<SimplePlaylist> playlistPage = request.get();
-            userData.setPlaylists(playlistPage.getItems());
-            System.out.println(String.format("Found %d playlists", playlistPage.getItems().size()));
+            Futures.addCallback(responseFuture, new FutureCallback<Page<SimplePlaylist>>() {
+                @Override
+                public void onSuccess(Page<SimplePlaylist> playlistPage) {
+                    userData.setPlaylists(playlistPage.getItems());
+                    Platform.runLater(()-> {
+                        uiController.setStatus(String.format("Found %d playlists", playlistPage.getItems().size()));
+                    });
+                    System.out.println(String.format("Found %d playlists", playlistPage.getItems().size()));
+                }
+
+                @Override
+                public void onFailure(Throwable throwable) {
+
+                }
+            });
         }
         catch (Exception ex){
             ex.printStackTrace();
+            logger.throwing("Analyser", "getUserPlaylists", ex);
         }
     }
 
     private void getUserSavedTracks(){
+        Platform.runLater(()-> {
+            uiController.setStatus("Looking through the saved tracks... Amazing!");
+        });
         if (userData.isTokenExpired())
             refreshToken();
         int offset = 0;
@@ -253,39 +327,54 @@ public class Analyser {
                 if (offset > libraryTracks.getTotal())
                     hasMore = false;
             }
+            Platform.runLater(()-> {
+                uiController.setStatus(String.format("Found %d tracks", tracks.size()));
+            });
             System.out.println(String.format("Found %d saved tracks", tracks.size()));
             userData.setTracks(tracks);
         }
         catch (Exception ex){
             ex.printStackTrace();
+            logger.throwing("Analyser", "getUserSavedTracks", ex);
         }
 
     }
 
-    public void analyse(){
+    private void analyse(){
         List<PlaylistTrack> tracks = getTracksFromPlaylists();
-
-
-
-        Thread thread = new Thread(() ->{
-            for(LibraryTrack track : userData.getTracks()){
-                getTrackInfo(track.getTrack().getId());
-            }
-            userData.getTracks().clear();
+        Platform.runLater(()-> {
+            uiController.setStatus("Sending collected tracks info");
         });
-
+        totalTracks = tracks.size() + userData.getTracks().size();
+        Thread thread = new Thread(() ->{
+            for(int i = 0; i < userData.getTracks().size() / 2; i ++){
+                getTrackInfo(userData.getTracks().get(i).getTrack().getId());
+            }
+            for(int i = 0; i < tracks.size() / 3; i ++){
+                getTrackInfo(tracks.get(i).getTrack().getId());
+            }
+        });
         thread.setDaemon(true);
         thread.start();
 
+        Thread thread1 = new Thread( () -> {
+            for(int i = userData.getTracks().size() / 2; i < userData.getTracks().size(); i ++){
+                getTrackInfo(userData.getTracks().get(i).getTrack().getId());
+            }
+            for(int i = tracks.size() / 3; i < 2 * tracks.size() / 3; i ++){
+                getTrackInfo(tracks.get(i).getTrack().getId());
+            }
+        });
 
-        for(PlaylistTrack track : tracks){
-            getTrackInfo(track.getTrack().getId());
+        thread1.setDaemon(true);
+        thread1.start();
+
+        for(int i = 2* tracks.size() / 3; i <  tracks.size(); i ++){
+            getTrackInfo(tracks.get(i).getTrack().getId());
         }
-
-        Platform.exit();
     }
 
-    private synchronized void getTrackInfo(String trackId){
+    private void getTrackInfo(String trackId){
         final HttpClient client = HttpClientBuilder.create().build();
         String baseURL = String.format("https://api.spotify.com/v1/audio-features/%s", trackId);
         HttpGet requestTrackInfo = new HttpGet(baseURL);
@@ -308,6 +397,7 @@ public class Analyser {
         }
         catch (Exception ex){
             ex.printStackTrace();
+            logger.throwing("Analyser", "getTrackInfo", ex);
         }
     }
 
@@ -325,9 +415,26 @@ public class Analyser {
             else{
                 System.out.println("Duplicate");
             }
+            Platform.runLater(()-> {
+                double progress = sentTracks.incrementAndGet() / totalTracks;
+                System.out.println(progress);
+                uiController.updateProgress(progress);
+            });
         }
         catch (Exception ex){
             ex.printStackTrace();
+            logger.throwing("Analyser", "sendTrackInfo", ex);
+        }
+    }
+
+    private void ping(){
+        final String baseURL = "https://tracksdata.herokuapp.com/rest/init";
+        final HttpClient client = HttpClientBuilder.create().build();
+        HttpGet request = new HttpGet(baseURL);
+        try{
+            client.execute(request);
+        }
+        catch (Exception ex){
         }
     }
 
@@ -337,6 +444,8 @@ public class Analyser {
             boolean hasMore = true;
             int offset = 0;
             while(hasMore) {
+                if (userData.isTokenExpired())
+                    refreshToken();
                 final PlaylistTracksRequest request = api.getPlaylistTracks(playlist.getOwner().getId(), playlist.getId()).offset(offset).build();
                 try {
                     Page<PlaylistTrack> playlistPage = request.get();
@@ -346,10 +455,13 @@ public class Analyser {
                         hasMore = false;
                 } catch (Exception ex) {
                     ex.printStackTrace();
+                    logger.throwing("Analyser", "getTracksFromPlaylists", ex);
                 }
             }
         }
         System.out.println(String.format("Total tracks in playlists: %d", tracks.size()));
         return tracks;
     }
+
+
 }
