@@ -1,18 +1,18 @@
 package util;
 
-import com.wrapper.spotify.models.LibraryTrack;
-import com.wrapper.spotify.models.SimplePlaylist;
+import com.wrapper.spotify.models.Track;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
 
 public class Data{
 
-    public Data(){   }
+    public Data(){
+        tracks = Collections.synchronizedSet(new HashSet<>());
+    }
 
     private String userId;
-    private List<SimplePlaylist> playlists;
-    private List<LibraryTrack> tracks;
+    private Set<Track> tracks;
     private LocalDateTime tokenExpTime;
 
     public String getUserId(){
@@ -23,14 +23,6 @@ public class Data{
         userId = id;
     }
 
-    public void setPlaylists(List<SimplePlaylist> playlists){
-        this.playlists = playlists;
-    }
-
-    public List<SimplePlaylist> getPlaylists(){
-        return playlists;
-    }
-
     public LocalDateTime getTokenExpTime(){
         return tokenExpTime;
     }
@@ -39,12 +31,23 @@ public class Data{
         this.tokenExpTime = tokenExpTime;
     }
 
-    public void setTracks(List<LibraryTrack> tracks){
+    public void setTracks(Set<Track> tracks){
         this.tracks = tracks;
     }
 
-    public List<LibraryTrack> getTracks(){
+    public Set<Track> getTracks(){
         return tracks;
+    }
+
+    public synchronized Track getTrack(int index){
+        int i = 0;
+        for (Iterator<Track> it = tracks.iterator(); it.hasNext(); ) {
+            Track track = it.next();
+            if (i == index)
+                return track;
+            i++;
+        }
+        return null;
     }
 
     public boolean isTokenExpired(){

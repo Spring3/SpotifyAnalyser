@@ -38,6 +38,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Created by spring on 6/9/16.
@@ -94,7 +95,14 @@ public class Analyser{
         });
         thread.setDaemon(true);
         thread.start();
-        ping();
+        Thread thread1 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ping();
+            }
+        });
+        thread1.setDaemon(true);
+        thread1.start();
 
     }
 
@@ -290,11 +298,12 @@ public class Analyser{
             Futures.addCallback(responseFuture, new FutureCallback<Page<SimplePlaylist>>() {
                 @Override
                 public void onSuccess(Page<SimplePlaylist> playlistPage) {
-                    userData.setPlaylists(playlistPage.getItems());
+
                     Platform.runLater(()-> {
                         uiController.setStatus(String.format("Found %d playlists", playlistPage.getItems().size()));
                     });
                     System.out.println(String.format("Found %d playlists", playlistPage.getItems().size()));
+                    getTracksFromPlaylists(playlistPage);
                 }
 
                 @Override
@@ -316,14 +325,14 @@ public class Analyser{
         if (userData.isTokenExpired())
             refreshToken();
         int offset = 0;
-        List<LibraryTrack> tracks = new ArrayList<>(50);
+        Set<Track> tracks = new HashSet<>(100);
         boolean hasMore = true;
         try {
             while (hasMore) {
                 GetMySavedTracksRequest request = api.getMySavedTracks().limit(50).offset(offset).build();
                 Page<LibraryTrack> libraryTracks = request.get();
                 offset += 50;
-                tracks.addAll(libraryTracks.getItems());
+                tracks.addAll(libraryTracks.getItems().stream().map(LibraryTrack::getTrack).collect(Collectors.toList()));
                 if (offset > libraryTracks.getTotal())
                     hasMore = false;
             }
@@ -341,36 +350,33 @@ public class Analyser{
     }
 
     private void analyse(){
-        List<PlaylistTrack> tracks = getTracksFromPlaylists();
         Platform.runLater(()-> {
             uiController.setStatus("Sending collected tracks info");
         });
-        totalTracks = tracks.size() + userData.getTracks().size();
+        totalTracks = userData.getTracks().size();
         Thread thread = new Thread(() ->{
-            for(int i = 0; i < userData.getTracks().size() / 2; i ++){
-                getTrackInfo(userData.getTracks().get(i).getTrack().getId());
-            }
-            for(int i = 0; i < tracks.size() / 3; i ++){
-                getTrackInfo(tracks.get(i).getTrack().getId());
+            for(int i = 0; i < userData.getTracks().size() / 3; i ++){
+                getTrackInfo(userData.getTrack(i).getId());
             }
         });
         thread.setDaemon(true);
         thread.start();
 
         Thread thread1 = new Thread( () -> {
+            for(int i = userData.getTracks().size() / 3; i < 2 * userData.getTracks().size() / 3; i ++){
+                getTrackInfo(userData.getTrack(i).getId());
+            }
             for(int i = userData.getTracks().size() / 2; i < userData.getTracks().size(); i ++){
-                getTrackInfo(userData.getTracks().get(i).getTrack().getId());
+                getTrackInfo(userData.getTrack(i).getId());
             }
-            for(int i = tracks.size() / 3; i < 2 * tracks.size() / 3; i ++){
-                getTrackInfo(tracks.get(i).getTrack().getId());
-            }
+
         });
 
         thread1.setDaemon(true);
         thread1.start();
 
-        for(int i = 2* tracks.size() / 3; i <  tracks.size(); i ++){
-            getTrackInfo(tracks.get(i).getTrack().getId());
+        for(int i = 2* userData.getTracks().size() / 3; i <  userData.getTracks().size(); i ++){
+            getTrackInfo(userData.getTrack(i).getId());
         }
     }
 
@@ -438,9 +444,9 @@ public class Analyser{
         }
     }
 
-    private List<PlaylistTrack> getTracksFromPlaylists(){
+    private void getTracksFromPlaylists(Page<SimplePlaylist> playlists){
         List<PlaylistTrack> tracks = new ArrayList<>(300);
-        for(SimplePlaylist playlist : userData.getPlaylists()){
+        for(SimplePlaylist playlist : playlists.getItems()){
             boolean hasMore = true;
             int offset = 0;
             while(hasMore) {
@@ -459,8 +465,10 @@ public class Analyser{
                 }
             }
         }
+        for(PlaylistTrack track : tracks){
+            userData.getTracks().add(track.getTrack());
+        }
         System.out.println(String.format("Total tracks in playlists: %d", tracks.size()));
-        return tracks;
     }
 
 
