@@ -32,6 +32,7 @@ public class Main extends Application{
             primaryStage.setScene(scene);
             primaryStage.setTitle("Bliss");
             primaryStage.setOnCloseRequest( event -> Platform.exit());
+            primaryStage.setResizable(false);
             primaryStage.show();
         }
         catch (Exception ex){

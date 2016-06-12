@@ -5,7 +5,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="183.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.UIController">
+<AnchorPane maxHeight="221.0" maxWidth="600.0" minHeight="-Infinity" minWidth="-Infinity" prefHeight="221.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.UIController">
    <children>
       <BorderPane prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <center>
@@ -16,28 +16,35 @@
                         <Font name="Hiragino Sans W1" size="30.0" />
                      </font>
                   </Label>
-                  <ProgressBar fx:id="progress" layoutX="20.0" layoutY="121.0" prefHeight="30.0" prefWidth="600.0" progress="0.0" styleClass="progress" stylesheets="@styles.css" visible="false" AnchorPane.bottomAnchor="36.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" />
-                  <Label fx:id="lbl_success" alignment="CENTER" layoutX="21.0" layoutY="124.0" prefHeight="17.0" prefWidth="558.0" text="SUCCESS" textFill="#2e7d32" visible="false" AnchorPane.bottomAnchor="42.0" AnchorPane.leftAnchor="21.0" AnchorPane.rightAnchor="21.0">
-                     <font>
-                        <Font name="Gill Sans" size="13.0" />
-                     </font>
-                  </Label>
-                  <Label fx:id="lbl_status" alignment="CENTER" layoutY="90.0" prefHeight="16.0" prefWidth="327.0" text="Retrieving playlists..." textAlignment="CENTER" visible="false" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="80.0">
-                     <font>
-                        <Font name="Hiragino Sans W1" size="18.0" />
-                     </font>
-                  </Label>
-                  <Button fx:id="btn_analyse" layoutX="251.0" layoutY="80.0" mnemonicParsing="false" onAction="#btn_begin" prefHeight="36.0" prefWidth="99.0" text="Analyse" AnchorPane.bottomAnchor="67.0" AnchorPane.leftAnchor="251.0" AnchorPane.rightAnchor="250.0">
+                  <Button fx:id="btn_analyse" layoutX="251.0" layoutY="131.0" mnemonicParsing="false" onAction="#btn_begin" prefHeight="36.0" prefWidth="99.0" text="Connect" AnchorPane.bottomAnchor="16.0" AnchorPane.leftAnchor="251.0" AnchorPane.rightAnchor="250.0">
                      <font>
                         <Font name="Hiragino Sans W1" size="18.0" />
                      </font>
                   </Button>
                   <Separator layoutX="200.0" layoutY="64.0" prefWidth="200.0" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="200.0" AnchorPane.topAnchor="54.0" />
-                  <Button fx:id="btn_switchAcc" layoutX="234.0" layoutY="155.0" mnemonicParsing="false" onAction="#btn_logout" prefHeight="24.0" prefWidth="133.0" styleClass="ghost" text="Another account?" visible="false">
+                  <Label alignment="CENTER" layoutX="-1.0" layoutY="66.0" prefHeight="13.0" prefWidth="600.0" text="For MongoDB" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="66.0">
+                     <font>
+                        <Font name="Hiragino Sans W2" size="11.0" />
+                     </font>
+                  </Label>
+                  <TextField fx:id="txt_uri" alignment="CENTER" layoutX="208.0" layoutY="88.0" prefHeight="27.0" prefWidth="107.0" promptText="localhost" AnchorPane.leftAnchor="208.0" AnchorPane.rightAnchor="285.0">
+                     <font>
+                        <Font name="Hiragino Sans W1" size="13.0" />
+                     </font></TextField>
+                  <TextField fx:id="txt_collection" alignment="CENTER" layoutX="208.0" layoutY="127.0" prefHeight="27.0" prefWidth="182.0" promptText="collection name" AnchorPane.leftAnchor="208.0" AnchorPane.rightAnchor="210.0">
+                     <font>
+                        <Font name="Hiragino Sans W1" size="13.0" />
+                     </font></TextField>
+                  <TextField fx:id="txt_port" alignment="CENTER" layoutX="326.0" layoutY="88.0" prefHeight="27.0" prefWidth="64.0" promptText="27017" AnchorPane.leftAnchor="326.0" AnchorPane.rightAnchor="210.0">
                      <font>
                         <Font name="Hiragino Sans W1" size="13.0" />
                      </font>
-                  </Button>
+                  </TextField>
+                  <Label fx:id="lbl_status" alignment="CENTER" layoutY="102.0" prefHeight="17.0" prefWidth="600.0" text="Label" visible="false" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="102.0">
+                     <font>
+                        <Font name="Hiragino Sans W2" size="17.0" />
+                     </font>
+                  </Label>
                </children>
             </AnchorPane>
          </center>

@@ -5,7 +5,10 @@ public enum Config {
     AT("AT"),
     RT("RT"),
     EXP("EXP"),
-    USERID("uid");
+    USERID("uid"),
+    URI("uri"),
+    PORT("port"),
+    COLLECTION("COLLECTION");
 
     Config(String value){
         val = value;
