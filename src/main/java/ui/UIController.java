@@ -28,6 +28,7 @@ public class UIController {
     @FXML
     Button btn_switchAcc;
     private Analyser analyser;
+    private double currentProgress;
 
     public void setStatus(String status){
         lbl_status.setText(status);
@@ -38,8 +39,9 @@ public class UIController {
     }
 
     public synchronized void updateProgress(double progress){
-        this.progress.setProgress(progress);
-        if (progress == 1 || 1 - progress < 0.01){
+        currentProgress += progress;
+        this.progress.setProgress(currentProgress);
+        if (currentProgress == 1 || 1 - currentProgress < 0.01){
             showSuccess(true);
             setStatus("Thank you! See you around!");
             btn_switchAcc.setVisible(true);

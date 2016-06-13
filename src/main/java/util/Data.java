@@ -8,10 +8,13 @@ import java.util.*;
 public class Data{
 
     public Data(){
+
         tracks = Collections.synchronizedSet(new HashSet<>());
+        savedTracksIds = new StringBuilder();
     }
 
     private String userId;
+    private StringBuilder savedTracksIds;
     private Set<Track> tracks;
     private LocalDateTime tokenExpTime;
 
@@ -31,8 +34,11 @@ public class Data{
         this.tokenExpTime = tokenExpTime;
     }
 
-    public void setTracks(Set<Track> tracks){
-        this.tracks = tracks;
+    public void addTrack(Track track){
+        if (!savedTracksIds.toString().contains(track.getId())) {
+            getTracks().add(track);
+            savedTracksIds.append(track.getId()).append(",");
+        }
     }
 
     public Set<Track> getTracks(){

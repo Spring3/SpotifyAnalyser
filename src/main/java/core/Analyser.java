@@ -10,8 +10,6 @@ import com.wrapper.spotify.methods.PlaylistTracksRequest;
 import com.wrapper.spotify.methods.UserPlaylistsRequest;
 import com.wrapper.spotify.models.*;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
 import javafx.scene.Scene;
 import javafx.scene.web.WebView;
@@ -35,25 +33,21 @@ import java.nio.file.Paths;
 import java.security.Key;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.FileHandler;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 /**
  * Created by spring on 6/9/16.
  */
 public class Analyser{
 
-    private static final String CLIENT_ID = "";
-    private static final String CLIENT_SECRET = "";
-    private static final String REDIRECT_URI = "";
+    private static final String CLIENT_ID = "62f4b3411b1d4a9c92d9cb621c3daf5a";
+    private static final String CLIENT_SECRET = "3c300aa46ff843d2b912c89ad1aa52e9";
+    private static final String REDIRECT_URI = "https://tracksdata.herokuapp.com/rest/callback";
 
     private static Logger logger = Logger.getLogger("log");
 
     public Analyser(UIController controller){
         properties = new Properties();
-        sentTracks = new AtomicInteger(0);
         userData = new Data();
         security = Security.getInstance();
         uiController = controller;
@@ -62,7 +56,6 @@ public class Analyser{
     private Properties properties;
     private double totalTracks;
     private int sendingAmount;
-    private AtomicInteger sentTracks;
     private UIController uiController;
     private Api api = Api.builder()
             .clientId(CLIENT_ID)
@@ -320,7 +313,9 @@ public class Analyser{
                 GetMySavedTracksRequest request = api.getMySavedTracks().limit(50).offset(offset).build();
                 Page<LibraryTrack> libraryTracks = request.get();
                 offset += 50;
-                tracks.addAll(libraryTracks.getItems().stream().map(LibraryTrack::getTrack).collect(Collectors.toList()));
+                for(LibraryTrack track : libraryTracks.getItems()){
+                    tracks.add(track.getTrack());
+                }
                 if (offset > libraryTracks.getTotal())
                     hasMore = false;
             }
@@ -328,7 +323,9 @@ public class Analyser{
                 uiController.setStatus(String.format("Found %d tracks", tracks.size()));
             });
             System.out.println(String.format("Found %d saved tracks", tracks.size()));
-            userData.setTracks(tracks);
+            for(Track track : tracks){
+                userData.addTrack(track);
+            }
         }
         catch (Exception ex){
             ex.printStackTrace();
@@ -349,6 +346,7 @@ public class Analyser{
                 builder.append(track.getId()).append(",");
             sendingAmount = userData.getTracks().size();
             getTrackInfo(builder.substring(0, builder.length() - 1));
+            System.out.println(String.format("Sent %d tracks", sendingAmount));
         }
         else{
             int tracksLeft = userData.getTracks().size();
@@ -361,13 +359,13 @@ public class Analyser{
                 sendingAmount = tracks.size();
                 String part = builder.toString();
                 getTrackInfo(part.substring(0, part.length() - 1));
+                System.out.println(String.format("Sent %d tracks", sendingAmount));
                 start += amount;
                 tracksLeft -= amount;
 
                 builder = new StringBuilder();
             }
         }
-
     }
 
     private void getTrackInfo(String tracksIds){
@@ -416,7 +414,7 @@ public class Analyser{
                 System.out.println("Duplicate");
             }
             Platform.runLater(()-> {
-                double progress = sentTracks.incrementAndGet() / totalTracks;
+                double progress = sendingAmount / totalTracks;
                 System.out.println(progress);
                 uiController.updateProgress(progress);
             });
@@ -439,7 +437,7 @@ public class Analyser{
     }
 
     private void getTracksFromPlaylists(Page<SimplePlaylist> playlists){
-        List<PlaylistTrack> tracks = new ArrayList<>(300);
+        Set<PlaylistTrack> tracks = new HashSet<>(300);
         for(SimplePlaylist playlist : playlists.getItems()){
             boolean hasMore = true;
             int offset = 0;
@@ -460,10 +458,23 @@ public class Analyser{
             }
         }
         for(PlaylistTrack track : tracks){
-            userData.getTracks().add(track.getTrack());
+            userData.addTrack(track.getTrack());
         }
         System.out.println(String.format("Total tracks in playlists: %d", tracks.size()));
     }
 
-
+    @Override
+    public int hashCode() {
+        int result;
+        long temp;
+        result = properties != null ? properties.hashCode() : 0;
+        temp = Double.doubleToLongBits(totalTracks);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        result = 31 * result + sendingAmount;
+        result = 31 * result + (uiController != null ? uiController.hashCode() : 0);
+        result = 31 * result + (api != null ? api.hashCode() : 0);
+        result = 31 * result + (userData != null ? userData.hashCode() : 0);
+        result = 31 * result + (security != null ? security.hashCode() : 0);
+        return result;
+    }
 }
