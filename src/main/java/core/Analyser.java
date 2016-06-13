@@ -57,9 +57,6 @@ public class Analyser{
         userData = new Data();
         security = Security.getInstance();
         uiController = controller;
-        try {
-            logger.addHandler(new FileHandler("logs"));
-        }catch (Exception ex){ex.printStackTrace();}
     }
 
     private Properties properties;
