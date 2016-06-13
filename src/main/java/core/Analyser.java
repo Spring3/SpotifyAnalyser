@@ -45,9 +45,10 @@ import java.util.stream.Collectors;
  */
 public class Analyser{
 
-    private static final String CLIENT_ID = "62f4b3411b1d4a9c92d9cb621c3daf5a";
-    private static final String CLIENT_SECRET = "3c300aa46ff843d2b912c89ad1aa52e9";
-    private static final String REDIRECT_URI = "https://tracksdata.herokuapp.com/rest/callback";
+    private static final String CLIENT_ID = "";
+    private static final String CLIENT_SECRET = "";
+    private static final String REDIRECT_URI = "";
+
     private static Logger logger = Logger.getLogger("log");
 
     public Analyser(UIController controller){
@@ -392,7 +393,8 @@ public class Analyser{
                 result.append(line);
             }
             String json = result.toString();
-            json = json.substring(19, json.length() - 1);
+            // 22 - to remove header of the json
+            json = json.substring(22, json.length() - 1);
             System.out.println(json);
             sendTrackInfo(json);
         }
