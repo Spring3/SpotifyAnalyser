@@ -400,7 +400,7 @@ public class Analyser{
     }
 
     private void sendTrackInfo(String json){
-        final String baseURL = "https://tracksdata.herokuapp.com/rest/save";
+        final String baseURL = "https://tracksdata.herokuapp.com/rest/saveMany";
         final HttpClient client = HttpClientBuilder.create().build();
         HttpPost request = new HttpPost(baseURL);
         request.setHeader("Content-Type", "application/json");
