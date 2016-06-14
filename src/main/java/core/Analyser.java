@@ -280,8 +280,9 @@ public class Analyser{
                 lineCount ++;
                 if (lineCount == portion)
                 {
-                    pack.append("]");
-                    result.add(pack.toString());
+                    String jsonPack = pack.toString();
+                    jsonPack = String.format("%s]", jsonPack.substring(0, jsonPack.length() - 1));
+                    result.add(jsonPack);
                     pack = new StringBuilder();
                     pack.append("[");
                     lineCount = 0;
@@ -292,8 +293,9 @@ public class Analyser{
         catch (Exception ex){
             ex.printStackTrace();
         }
-        pack.append("]");
-        result.add(pack.toString());
+        String jsonPack = pack.toString();
+        jsonPack = String.format("%s]", jsonPack.substring(0, jsonPack.length() - 1));
+        result.add(jsonPack);
         return result;
     }
 
