@@ -6,10 +6,15 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.stage.FileChooser;
 import util.Config;
 import util.Writer;
 
+import java.io.File;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ResourceBundle;
 
 /**
@@ -45,6 +50,12 @@ public class UIController implements Initializable {
     TextField txt_port;
     @FXML
     TextField txt_collection;
+    @FXML
+    TextField txt_json;
+    @FXML
+    Button btn_send;
+    @FXML
+    Button btn_chooser;
 
     private Analyser analyser;
 
@@ -71,5 +82,24 @@ public class UIController implements Initializable {
 
         }
 
+    }
+
+    public void send(ActionEvent actionEvent) {
+        if (!txt_json.getText().isEmpty()){
+            Path path = Paths.get(txt_json.getText());
+            if (Files.exists(path)){
+                if (analyser == null)
+                    analyser = new Analyser(this);
+                analyser.sendData(path.toFile());
+            }
+        }
+    }
+
+    public void choose(ActionEvent actionEvent){
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Open json file");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("JSON", "*.json"));
+        File selectedFile = fileChooser.showOpenDialog(null);
+        txt_json.setText(selectedFile.getPath());
     }
 }

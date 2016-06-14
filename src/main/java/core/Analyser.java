@@ -14,6 +14,8 @@ import javafx.stage.Stage;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import ui.UIController;
 import util.*;
@@ -22,7 +24,6 @@ import util.Writer;
 import java.io.*;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
 /**
@@ -40,9 +41,6 @@ public class Analyser{
         uiController = controller;
         writer = Writer.getInstance();
         mongo = Mongo.getInstance();
-        try {
-            logger.addHandler(new FileHandler("logs"));
-        }catch (Exception ex){ex.printStackTrace();}
     }
 
     private UIController uiController;
@@ -246,6 +244,57 @@ public class Analyser{
             from += amount;
         }
         while(!result.isEmpty() && !result.equals("[]") && received == amount);
+    }
+
+    public void sendData(File json){
+        final String baseURL = "https://tracksdata.herokuapp.com/rest/saveMany";
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpPost request = new HttpPost(baseURL);
+        request.setHeader("Content-Type", "application/json");
+        try {
+            List<String> jsonPacks = new ArrayList<>(packFileAsJson(json, 100));
+            for(String pack : jsonPacks) {
+                request.setEntity(new StringEntity(pack));
+                HttpResponse response = client.execute(request);
+                if (response.getStatusLine().getStatusCode() == 200)
+                    System.out.println("Exported");
+            }
+        }
+        catch (Exception ex){
+            ex.printStackTrace();
+        }
+
+    }
+
+    private List<String> packFileAsJson(File json, int portion){
+        List<String> result = new ArrayList<>();
+        StringBuilder pack = new StringBuilder();
+        pack.append("[");
+        try {
+            BufferedReader rd = new BufferedReader(
+                    new FileReader(json));
+            int lineCount = 0;
+            String line = "";
+            while ((line = rd.readLine()) != null) {
+                pack.append(line).append(",");
+                lineCount ++;
+                if (lineCount == portion)
+                {
+                    pack.append("]");
+                    result.add(pack.toString());
+                    pack = new StringBuilder();
+                    pack.append("[");
+                    lineCount = 0;
+                }
+
+            }
+        }
+        catch (Exception ex){
+            ex.printStackTrace();
+        }
+        pack.append("]");
+        result.add(pack.toString());
+        return result;
     }
 
 

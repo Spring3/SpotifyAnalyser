@@ -24,7 +24,6 @@ public class Main extends Application{
     @Override
     public void start(Stage primaryStage) throws Exception {
         try {
-            logger.addHandler(new FileHandler("logs"));
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/main.fxml"));
             Parent root = loader.load();
             Scene scene = new Scene(root);
