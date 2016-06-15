@@ -17,7 +17,7 @@ config.properties
 
 *.iml
 log*
-.json
+*.json
 
 # mpeltonen/sbt-idea plugin
 .idea_modules/

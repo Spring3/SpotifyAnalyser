@@ -51,6 +51,6 @@ public class Data{
     }
 
     public boolean isTokenExpired(){
-        return tokenExpTime == null ? false : LocalDateTime.now().isAfter(tokenExpTime);
+        return tokenExpTime != null && LocalDateTime.now().isAfter(tokenExpTime);
     }
 }

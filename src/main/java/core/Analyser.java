@@ -11,6 +11,8 @@ import javafx.concurrent.Worker;
 import javafx.scene.Scene;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
+import net.sf.json.JSON;
+import net.sf.json.JSONObject;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -22,6 +24,8 @@ import util.*;
 import util.Writer;
 
 import java.io.*;
+import java.nio.charset.Charset;
+import java.text.Normalizer;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.logging.Logger;
@@ -248,16 +252,22 @@ public class Analyser{
 
     public void sendData(File json){
         final String baseURL = "https://tracksdata.herokuapp.com/rest/saveMany";
-        HttpClient client = HttpClientBuilder.create().build();
-        HttpPost request = new HttpPost(baseURL);
-        request.setHeader("Content-Type", "application/json");
         try {
             List<String> jsonPacks = new ArrayList<>(packFileAsJson(json, 100));
             for(String pack : jsonPacks) {
-                request.setEntity(new StringEntity(pack));
+                HttpClient client = HttpClientBuilder.create().build();
+                HttpPost request = new HttpPost(baseURL);
+                request.setHeader("Content-Type", "application/json; charset=utf-8");
+                StringEntity entity = new StringEntity(pack, "UTF-8");
+                entity.setContentEncoding("UTF-8");
+                entity.setContentType("application/json; charset=utf-8");
+                request.setEntity(entity);
                 HttpResponse response = client.execute(request);
                 if (response.getStatusLine().getStatusCode() == 200)
                     System.out.println("Exported");
+                else{
+                    System.out.println("Not saved");
+                }
             }
         }
         catch (Exception ex){
@@ -269,7 +279,7 @@ public class Analyser{
     private List<String> packFileAsJson(File json, int portion){
         List<String> result = new ArrayList<>();
         StringBuilder pack = new StringBuilder();
-        pack.append("[");
+        pack.append("[ ");
         try {
             BufferedReader rd = new BufferedReader(
                     new FileReader(json));
@@ -278,13 +288,13 @@ public class Analyser{
             while ((line = rd.readLine()) != null) {
                 pack.append(line).append(",");
                 lineCount ++;
-                if (lineCount == portion)
+                if (lineCount >= portion) // > will work great, when portion = 0
                 {
                     String jsonPack = pack.toString();
-                    jsonPack = String.format("%s]", jsonPack.substring(0, jsonPack.length() - 1));
+                    jsonPack = String.format("%s ]", jsonPack.substring(0, jsonPack.length() - 1));
                     result.add(jsonPack);
                     pack = new StringBuilder();
-                    pack.append("[");
+                    pack.append("[ ");
                     lineCount = 0;
                 }
 
@@ -294,8 +304,10 @@ public class Analyser{
             ex.printStackTrace();
         }
         String jsonPack = pack.toString();
-        jsonPack = String.format("%s]", jsonPack.substring(0, jsonPack.length() - 1));
-        result.add(jsonPack);
+        if (!jsonPack.isEmpty()) {
+            jsonPack = String.format("%s ]", jsonPack.substring(0, jsonPack.length() - 1));
+            result.add(jsonPack);
+        }
         return result;
     }
 
