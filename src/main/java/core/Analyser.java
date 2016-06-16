@@ -31,6 +31,7 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.Key;
+import java.text.Normalizer;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.logging.Logger;
@@ -340,13 +341,16 @@ public class Analyser{
         });
         totalTracks = userData.getTracks().size();
         int amount = 100;  // tracks per request
+        String json = "";
         StringBuilder builder = new StringBuilder();
         if (userData.getTracks().size() <= amount){
             for(Track track : userData.getTracks())
                 builder.append(track.getId()).append(",");
             sendingAmount = userData.getTracks().size();
-            getTrackInfo(builder.substring(0, builder.length() - 1));
-            System.out.println(String.format("Sent %d tracks", sendingAmount));
+            json = getTrackInfo(builder.substring(0, builder.length() - 1));
+            String newJSON = repackJson(new ArrayList<>(userData.getTracks()), json);
+            System.out.println(String.format("Sending %d tracks", sendingAmount));
+            sendTrackInfo(newJSON);
         }
         else{
             int tracksLeft = userData.getTracks().size();
@@ -358,8 +362,10 @@ public class Analyser{
                 }
                 sendingAmount = tracks.size();
                 String part = builder.toString();
-                getTrackInfo(part.substring(0, part.length() - 1));
-                System.out.println(String.format("Sent %d tracks", sendingAmount));
+                json = getTrackInfo(part.substring(0, part.length() - 1));
+                String newJSON = repackJson(tracks, json);
+                System.out.println(String.format("Sending %d tracks", sendingAmount));
+                sendTrackInfo(newJSON);
                 start += amount;
                 tracksLeft -= amount;
 
@@ -368,7 +374,44 @@ public class Analyser{
         }
     }
 
-    private void getTrackInfo(String tracksIds){
+    private String repackJson(List<Track> tracks, String json){
+        StringBuilder resultJSON = new StringBuilder();
+        resultJSON.append("[");
+        String[] separateJSONs = json.substring(1, json.length() - 1).split("},");
+        for(int i = 0; i < separateJSONs.length; i ++){
+            separateJSONs[i] = separateJSONs[i].replace("{", "").trim();
+            String[] jsonProperties = separateJSONs[i].split(",");
+            StringBuilder jsonBuilder = new StringBuilder();
+            StringBuilder artistsBuilder = new StringBuilder();
+            Track currentTrack = tracks.get(i);
+            if (currentTrack.getId().equals("null"))
+                continue;
+            for(SimpleArtist author : currentTrack.getArtists())
+            {
+                artistsBuilder.append(author.getName()).append(",");
+            }
+
+            artistsBuilder.deleteCharAt(artistsBuilder.length() - 1).toString();
+            jsonBuilder.append("{").append("\"artist\":").append(String.format("\"%s\"", artistsBuilder.toString().replace("\"", "'"))).append(",")
+                                   .append("\"title\":").append(String.format("\"%s\"", currentTrack.getName().replace("\"", "'"))).append(",")
+                                   .append(jsonProperties[12].trim()).append(",") // id
+                                   .append("\"features\": {");
+            for(int k = 0; k < 11; k ++) {
+                jsonBuilder.append(jsonProperties[k].trim());
+                if (k < 10)
+                    jsonBuilder.append(",");
+                else{
+                    jsonBuilder.append("}},");
+                }
+            }
+            resultJSON.append(jsonBuilder.toString());
+        }
+        resultJSON.deleteCharAt(resultJSON.length() - 1);
+        resultJSON.append("]");
+        return resultJSON.toString();
+    }
+
+    private String getTrackInfo(String tracksIds){
         final HttpClient client = HttpClientBuilder.create().build();
         String baseURL = String.format("https://api.spotify.com/v1/audio-features/?ids=%s", tracksIds);
         HttpGet requestTrackInfo = new HttpGet(baseURL);
@@ -390,22 +433,27 @@ public class Analyser{
             String json = result.toString();
             // 22 - to remove header of the json
             json = json.substring(22, json.length() - 1);
-            System.out.println(json);
-            sendTrackInfo(json);
+            return json;
         }
         catch (Exception ex){
             ex.printStackTrace();
             logger.throwing("Analyser", "getTrackInfo", ex);
         }
+        return "";
     }
 
     private void sendTrackInfo(String json){
         final String baseURL = "https://tracksdata.herokuapp.com/rest/saveMany";
         final HttpClient client = HttpClientBuilder.create().build();
         HttpPost request = new HttpPost(baseURL);
-        request.setHeader("Content-Type", "application/json");
+        request.setHeader("Content-Type", "application/json; charset=UTF-8");
         try {
-            request.setEntity(new StringEntity(json));
+            json = new String(json.getBytes(), "UTF-8");
+            json = Normalizer.normalize(json, Normalizer.Form.NFKD);
+            StringEntity entity = new StringEntity(json, "UTF-8");
+            entity.setContentEncoding("UTF-8");
+            entity.setContentType("application/json; charset=UTF-8");
+            request.setEntity(entity);
             HttpResponse response = client.execute(request);
             if (response.getStatusLine().getStatusCode() == 200){
                 System.out.println("Sent");
